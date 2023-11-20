@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -331,6 +332,13 @@ func makeAccessorStage(pair []string) evaluationOperator {
 
 			switch coreValue.Kind() {
 			case reflect.Struct:
+				// check if field is exported
+				firstCharacter := getFirstRune(pair[i])
+				if unicode.ToUpper(firstCharacter) != firstCharacter {
+					errorMsg := fmt.Sprintf("Unable to access unexported field '%s' in '%s'", pair[i], pair[i-1])
+					return nil, errors.New(errorMsg)
+				}
+
 				field = coreValue.FieldByName(pair[i])
 				if field != (reflect.Value{}) {
 					value = field.Interface()
@@ -484,8 +492,8 @@ func isFloat64(value interface{}) bool {
 }
 
 /*
-	Addition usually means between numbers, but can also mean string concat.
-	String concat needs one (or both) of the sides to be a string.
+Addition usually means between numbers, but can also mean string concat.
+String concat needs one (or both) of the sides to be a string.
 */
 func additionTypeCheck(left interface{}, right interface{}) bool {
 
@@ -499,8 +507,8 @@ func additionTypeCheck(left interface{}, right interface{}) bool {
 }
 
 /*
-	Comparison can either be between numbers, or lexicographic between two strings,
-	but never between the two.
+Comparison can either be between numbers, or lexicographic between two strings,
+but never between the two.
 */
 func comparatorTypeCheck(left interface{}, right interface{}) bool {
 
@@ -522,8 +530,8 @@ func isArray(value interface{}) bool {
 }
 
 /*
-	Converting a boolean to an interface{} requires an allocation.
-	We can use interned bools to avoid this cost.
+Converting a boolean to an interface{} requires an allocation.
+We can use interned bools to avoid this cost.
 */
 func boolIface(b bool) interface{} {
 	if b {

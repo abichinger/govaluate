@@ -15,7 +15,7 @@ type DebugStruct struct {
 }
 
 /*
-	Represents a test for parsing failures
+Represents a test for parsing failures
 */
 type EvaluationFailureTest struct {
 	Name       string
@@ -36,6 +36,7 @@ const (
 	TOO_FEW_ARGS                    = "Too few arguments to parameter call"
 	TOO_MANY_ARGS                   = "Too many arguments to parameter call"
 	MISMATCHED_PARAMETERS           = "Argument type conversion failed"
+	UNEXPORTED_ACCESSOR             = "Unable to access unexported"
 )
 
 // preset parameter map of types that can be used in an evaluation failure test to check typing.
@@ -247,8 +248,8 @@ func TestLogicalOperatorTyping(test *testing.T) {
 }
 
 /*
-	While there is type-safe transitions checked at parse-time, tested in the "parsing_test" and "parsingFailure_test" files,
-	we also need to make sure that we receive type mismatch errors during evaluation.
+While there is type-safe transitions checked at parse-time, tested in the "parsing_test" and "parsingFailure_test" files,
+we also need to make sure that we receive type mismatch errors during evaluation.
 */
 func TestComparatorTyping(test *testing.T) {
 
@@ -489,6 +490,18 @@ func TestInvalidParameterCalls(test *testing.T) {
 			Input:      "foo.FuncArgStr(5)",
 			Parameters: fooFailureParameters,
 			Expected:   MISMATCHED_PARAMETERS,
+		},
+		EvaluationFailureTest{
+			Name:  "Unexported parameter access",
+			Input: "foo.bar",
+			Parameters: map[string]interface{}{
+				"foo": struct {
+					bar string
+				}{
+					bar: "baz",
+				},
+			},
+			Expected: UNEXPORTED_ACCESSOR,
 		},
 	}
 
